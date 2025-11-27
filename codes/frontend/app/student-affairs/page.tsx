@@ -2,69 +2,107 @@
 
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { FeatureGate } from "@/components/access/feature-gate"
 import { clearanceRequests } from "@/lib/mock-data"
-import { CheckCircle, Clock, Users, AlertCircle } from "lucide-react"
+import { UsersRound, Clock3, CheckCircle2, AlertTriangle, PhoneCall } from "lucide-react"
 
 export default function StudentAffairsDashboard() {
   const saClearances = clearanceRequests.filter((c) => c.department === "student_affairs")
-  const pending = saClearances.filter((c) => c.status === "pending").length
-  const approved = saClearances.filter((c) => c.status === "approved").length
-  const inReview = saClearances.filter((c) => c.status === "in_review").length
+  const pending = saClearances.filter((c) => c.status === "pending")
+  const approved = saClearances.filter((c) => c.status === "approved")
+  const inReview = saClearances.filter((c) => c.status === "in_review")
 
   return (
-    <div className="space-y-6">
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4">
-          <div className="flex items-start justify-between">
+    <div className="space-y-8">
+      <header className="space-y-2">
+        <p className="text-xs uppercase tracking-[0.4em] text-slate-500">Student affairs</p>
+        <h1 className="text-3xl font-semibold text-slate-900">Unify hostel, library, and lab clearances into one feed.</h1>
+        <p className="text-sm text-slate-600">See every pending action, contact students instantly, and finalize approvals faster.</p>
+      </header>
+
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card className="p-5 border border-slate-200 bg-gradient-to-br from-slate-50 to-white">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-gray-600 mb-1">Total Requests</p>
-              <p className="text-2xl font-bold text-gray-900">{saClearances.length}</p>
+              <p className="text-xs uppercase tracking-wide text-slate-500">Total requests</p>
+              <p className="text-3xl font-semibold mt-1 text-slate-900">{saClearances.length}</p>
             </div>
-            <Users className="w-5 h-5 text-blue-500" />
+            <UsersRound className="h-6 w-6 text-slate-500" />
           </div>
         </Card>
 
-        <Card className="p-4">
-          <div className="flex items-start justify-between">
+        <Card className="p-5 border border-slate-200 bg-white">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-gray-600 mb-1">Pending</p>
-              <p className="text-2xl font-bold text-gray-900">{pending}</p>
+              <p className="text-xs uppercase tracking-wide text-slate-500">Pending</p>
+              <p className="text-3xl font-semibold mt-1 text-amber-600">{pending.length}</p>
             </div>
-            <Clock className="w-5 h-5 text-orange-500" />
+            <Clock3 className="h-6 w-6 text-amber-500" />
           </div>
         </Card>
 
-        <Card className="p-4">
-          <div className="flex items-start justify-between">
+        <Card className="p-5 border border-slate-200 bg-white">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-gray-600 mb-1">In Review</p>
-              <p className="text-2xl font-bold text-gray-900">{inReview}</p>
+              <p className="text-xs uppercase tracking-wide text-slate-500">In review</p>
+              <p className="text-3xl font-semibold mt-1 text-indigo-600">{inReview.length}</p>
             </div>
-            <AlertCircle className="w-5 h-5 text-blue-500" />
+            <AlertTriangle className="h-6 w-6 text-indigo-500" />
           </div>
         </Card>
 
-        <Card className="p-4">
-          <div className="flex items-start justify-between">
+        <Card className="p-5 border border-slate-200 bg-white">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-gray-600 mb-1">Approved</p>
-              <p className="text-2xl font-bold text-gray-900">{approved}</p>
+              <p className="text-xs uppercase tracking-wide text-slate-500">Cleared</p>
+              <p className="text-3xl font-semibold mt-1 text-emerald-600">{approved.length}</p>
             </div>
-            <CheckCircle className="w-5 h-5 text-green-500" />
+            <CheckCircle2 className="h-6 w-6 text-emerald-500" />
           </div>
         </Card>
       </div>
 
-      {/* Quick Actions */}
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-        <div className="flex flex-col md:flex-row gap-2">
-          <Button>Review Clearances</Button>
-          <Button variant="outline">Contact Students</Button>
-          <Button variant="outline">Manage Settings</Button>
-        </div>
-      </Card>
+      <FeatureGate feature="clearance:view_all_clearances">
+        <Card className="p-6 border border-slate-200 bg-white">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Queues</p>
+              <h2 className="text-xl font-semibold text-slate-900">Hostel/Library/Lab clearances</h2>
+            </div>
+            <Badge variant="outline" className="text-xs">
+              {pending.length} pending
+            </Badge>
+          </div>
+          <div className="space-y-3">
+            {saClearances.map((req) => (
+              <div key={req.id} className="rounded-2xl border border-slate-100 p-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">{req.studentName}</p>
+                  <p className="text-xs text-slate-500">{req.department.replace("_", " ")}</p>
+                </div>
+                <Badge className={req.status === "approved" ? "bg-emerald-500" : req.status === "pending" ? "bg-amber-500" : "bg-indigo-500"}>
+                  {req.status.replace("_", " ")}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </FeatureGate>
+
+      <FeatureGate feature="clearance:validate_activity_records">
+        <Card className="p-6 border border-slate-200 bg-white">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-semibold">Quick outreach</h3>
+            <PhoneCall className="h-5 w-5 text-slate-400" />
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            <Button>Contact pending students</Button>
+            <Button variant="outline">Send compliance reminder</Button>
+            <Button variant="outline">Export hostel list</Button>
+          </div>
+        </Card>
+      </FeatureGate>
     </div>
   )
 }

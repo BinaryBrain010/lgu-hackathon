@@ -1,62 +1,95 @@
 "use client"
 
+import { useState } from "react"
 import { FYPProgress } from "@/components/student/fyp-progress"
 import { DegreeClearanceRing } from "@/components/student/degree-clearance-ring"
 import { QuickStats } from "@/components/student/quick-stats"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { FeatureGate } from "@/components/access/feature-gate"
-import { notifications } from "@/lib/mock-data"
-import { Bell, FileText } from "lucide-react"
+import { notifications, fypStages } from "@/lib/mock-data"
+import { Bell, UploadCloud, ClipboardCheck } from "lucide-react"
+
+const initialDocs = [
+  { label: "Proposal Document", status: "Approved", updated: "Nov 18, 2025" },
+  { label: "SRS Document", status: "In Review", updated: "Nov 24, 2025" },
+  { label: "Final Documentation", status: "Pending Upload", updated: "—" },
+]
 
 export default function StudentDashboard() {
+  const [documents] = useState(initialDocs)
+
   return (
     <div className="space-y-6">
-      {/* Quick Stats */}
       <FeatureGate feature="fyp:view_own_fyp">
         <QuickStats supervisor="Dr. Fatima Khan" ideaStatus="Approved" deadline="Dec 15, 2024" />
       </FeatureGate>
 
-      {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* FYP Progress - Takes 2 columns */}
         <FeatureGate feature="fyp:track_progress">
           <div className="lg:col-span-2">
             <FYPProgress currentStage={4} status="In Review" />
           </div>
         </FeatureGate>
 
-        {/* Degree Clearance - Takes 1 column */}
-        <FeatureGate feature={["fyp:upload_srs", "fyp:upload_final_documentation"]} mode="any">
-          <div>
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-6">Quick Links</h3>
-              <div className="space-y-2">
-                <FeatureGate feature="fyp:upload_srs">
-                  <Button variant="outline" className="w-full justify-start bg-transparent">
-                    <FileText className="w-4 h-4 mr-2" />
-                    Upload SRS
+        <FeatureGate feature={["fyp:upload_proposal", "fyp:upload_srs", "fyp:upload_final_documentation"]} mode="any">
+          <Card className="p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Document Center</h3>
+              <UploadCloud className="w-5 h-5 text-slate-400" />
+            </div>
+            <div className="space-y-3">
+              {documents.map((doc) => (
+                <div
+                  key={doc.label}
+                  className="flex items-center justify-between rounded-2xl border border-slate-100 p-3"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">{doc.label}</p>
+                    <p className="text-xs text-slate-500">Last updated: {doc.updated}</p>
+                  </div>
+                  <Button size="sm" variant="outline">
+                    {doc.status === "Pending Upload" ? "Upload" : "View"}
                   </Button>
-                </FeatureGate>
-                <FeatureGate feature="fyp:view_own_fyp">
-                  <Button variant="outline" className="w-full justify-start bg-transparent">
-                    <FileText className="w-4 h-4 mr-2" />
-                    View Feedback
-                  </Button>
-                </FeatureGate>
-                <FeatureGate feature="fyp:upload_final_documentation">
-                  <Button variant="outline" className="w-full justify-start bg-transparent">
-                    <FileText className="w-4 h-4 mr-2" />
-                    Submit Final
-                  </Button>
-                </FeatureGate>
-              </div>
-            </Card>
-          </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" asChild>
+                <a href="/student/fyp/proposal">Proposal Workspace</a>
+              </Button>
+              <Button variant="outline" asChild>
+                <a href="/student/fyp/srs">SRS Workspace</a>
+              </Button>
+              <Button variant="outline" asChild>
+                <a href="/student/fyp/final">Final Docs</a>
+              </Button>
+            </div>
+          </Card>
         </FeatureGate>
       </div>
 
-      {/* Degree Clearance Status */}
+      <FeatureGate feature="fyp:view_own_fyp">
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4">Stage Timeline</h3>
+          <div className="grid gap-4 md:grid-cols-3">
+            {fypStages.map((stage, index) => (
+              <div
+                key={stage.id}
+                className={`rounded-2xl border p-4 ${
+                  index < 4 ? "border-emerald-200 bg-emerald-50" : index === 4 ? "border-indigo-200 bg-indigo-50" : "border-slate-200"
+                }`}
+              >
+                <p className="text-xs uppercase tracking-wide text-slate-500">{stage.name}</p>
+                <p className="text-sm text-slate-600 mt-1">
+                  Status: {index < 4 ? "Completed" : index === 4 ? "In Progress" : "Pending"}
+                </p>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </FeatureGate>
+
       <FeatureGate feature="clearance:view_multi_department_progress">
         <DegreeClearanceRing
           clearanceStatus={{
@@ -68,7 +101,21 @@ export default function StudentDashboard() {
         />
       </FeatureGate>
 
-      {/* Notifications */}
+      <FeatureGate feature="clearance:submit_request">
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Degree clearance</p>
+              <h3 className="text-lg font-semibold">Ready to submit?</h3>
+            </div>
+            <ClipboardCheck className="w-5 h-5 text-slate-400" />
+          </div>
+          <Button className="mt-4" asChild>
+            <a href="/student/clearance">Open Clearance Portal</a>
+          </Button>
+        </Card>
+      </FeatureGate>
+
       <FeatureGate feature="notifications:view">
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">

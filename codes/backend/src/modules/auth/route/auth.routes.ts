@@ -1,6 +1,13 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { AuthController } from '../controller/auth.controller';
 
+/**
+ * @swagger
+ * tags:
+ *   - name: Authentication
+ *     description: User authentication and authorization endpoints
+ */
+
 export class AuthRoutes {
   private router: Router;
   private controller: AuthController;

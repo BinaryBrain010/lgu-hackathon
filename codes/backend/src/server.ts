@@ -83,42 +83,66 @@ export class App {
         const swaggerJsdoc = require('swagger-jsdoc');
         const path = require('path');
 
+        // Get the correct base path - handle both compiled and source
+        // When running with tsx, __dirname might point to a temp location
+        // Try multiple path resolution strategies
+        const fs = require('fs');
+        
+        let srcDir: string = path.resolve(__dirname, '..'); // Default fallback
+        
+        // Strategy 1: Try relative to current file location
+        const relativeSrc = path.resolve(__dirname, '..');
+        if (fs.existsSync(path.join(relativeSrc, 'modules'))) {
+          srcDir = relativeSrc;
+        }
+        // Strategy 2: Try from project root (process.cwd())
+        else {
+          const projectRoot = process.cwd();
+          const projectSrc = path.join(projectRoot, 'src');
+          if (fs.existsSync(path.join(projectSrc, 'modules'))) {
+            srcDir = projectSrc;
+          }
+        }
+        
+        logger.info(`Swagger scanning from: ${srcDir}`);
+        
+        // Use glob patterns - swagger-jsdoc can read TypeScript files
+        const apiPaths = [
+          `${srcDir}/modules/**/route/*.ts`,
+          `${srcDir}/modules/**/route/*.js`,
+          `${srcDir}/modules/**/controller/*.ts`,
+          `${srcDir}/modules/**/controller/*.js`,
+        ];
+
+        // Import swagger definition
+        const { swaggerDefinition: baseDefinition } = require('./config/swagger');
+        
+        // Update server URL dynamically
+        const swaggerDefinition = {
+          ...baseDefinition,
+          servers: [
+            {
+              url: `http://localhost:${this.port}`,
+              description: 'Development server',
+            },
+          ],
+        };
+
         const swaggerOptions = {
-          definition: {
-            openapi: '3.0.0',
-            info: {
-              title: 'AcadFlow API',
-              version: '1.0.0',
-              description: 'FYP & Degree Workflow Automation Portal API Documentation',
-              contact: {
-                name: 'AcadFlow Team',
-              },
-            },
-            servers: [
-              {
-                url: `http://localhost:${this.port}`,
-                description: 'Development server',
-              },
-            ],
-            components: {
-              securitySchemes: {
-                bearerAuth: {
-                  type: 'http',
-                  scheme: 'bearer',
-                  bearerFormat: 'JWT',
-                },
-              },
-            },
-            security: [
-              {
-                bearerAuth: [],
-              },
-            ],
-          },
-          apis: [path.join(__dirname, './modules/**/route/*.ts'), path.join(__dirname, './modules/**/controller/*.ts')],
+          definition: swaggerDefinition,
+          apis: apiPaths,
         };
 
         const swaggerSpec = swaggerJsdoc(swaggerOptions);
+        
+        // Debug logging
+        if (swaggerSpec.paths) {
+          const pathCount = Object.keys(swaggerSpec.paths).length;
+          logger.info(`✅ Swagger spec generated successfully with ${pathCount} API paths`);
+        } else {
+          logger.warn('⚠️  Swagger spec generated but no paths found. Check file paths.');
+          logger.debug('Swagger search paths:', apiPaths);
+        }
         
         this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
           explorer: true,
@@ -126,10 +150,22 @@ export class App {
           customSiteTitle: 'AcadFlow API Documentation',
         }));
 
+        // Add endpoint to view raw Swagger spec for debugging
+        this.app.get('/api-docs.json', (req: Request, res: Response) => {
+          res.setHeader('Content-Type', 'application/json');
+          res.send(swaggerSpec);
+        });
+
         logger.info(`📚 Swagger documentation available at http://localhost:${this.port}/api-docs`);
-      } catch (error) {
-        logger.warn('Swagger setup failed, continuing without documentation', { error });
+        logger.info(`📄 Swagger JSON spec available at http://localhost:${this.port}/api-docs.json`);
+      } catch (error: any) {
+        logger.error('❌ Swagger setup failed, continuing without documentation', { 
+          error: error.message,
+          stack: config.nodeEnv === 'development' ? error.stack : undefined
+        });
       }
+    } else {
+      logger.info('Swagger documentation is disabled in production mode');
     }
   }
 

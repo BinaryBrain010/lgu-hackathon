@@ -1,6 +1,7 @@
 "use client"
 
-import { supervisorStudents } from "@/lib/mock-data"
+import { useState } from "react"
+import { supervisorStudents, examinerReports } from "@/lib/mock-data"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -20,8 +21,15 @@ export default function ExaminerDashboard() {
   const pending = assignedFYPs - evaluated
   const completion = assignedFYPs > 0 ? Math.round((evaluated / assignedFYPs) * 100) : 0
 
+  const [reportGenerating, setReportGenerating] = useState<string | null>(null)
+
+  function generateReport(id: string) {
+    setReportGenerating(id)
+    setTimeout(() => setReportGenerating(null), 1500)
+  }
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 text-slate-900">
       <header className="space-y-3">
         <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Examiner console</p>
         <h1 className="text-3xl font-semibold text-slate-900">Stay ahead of every evaluation window.</h1>
@@ -31,17 +39,17 @@ export default function ExaminerDashboard() {
       </header>
 
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="p-5 bg-slate-900 text-white">
+        <Card className="p-5 border border-slate-200 bg-gradient-to-br from-slate-50 to-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs uppercase tracking-wide text-white/60">Assigned FYPs</p>
-              <p className="text-3xl font-semibold mt-1">{assignedFYPs}</p>
+              <p className="text-xs uppercase tracking-wide text-slate-500">Assigned FYPs</p>
+              <p className="text-3xl font-semibold mt-1 text-slate-900">{assignedFYPs}</p>
             </div>
-            <ClipboardList className="h-6 w-6 text-slate-200" />
+            <ClipboardList className="h-6 w-6 text-slate-500" />
           </div>
         </Card>
 
-        <Card className="p-5">
+        <Card className="p-5 border border-slate-200 bg-white">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs uppercase tracking-wide text-slate-500">Evaluated</p>
@@ -51,7 +59,7 @@ export default function ExaminerDashboard() {
           </div>
         </Card>
 
-        <Card className="p-5">
+        <Card className="p-5 border border-slate-200 bg-white">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs uppercase tracking-wide text-slate-500">Pending</p>
@@ -61,7 +69,7 @@ export default function ExaminerDashboard() {
           </div>
         </Card>
 
-        <Card className="p-5">
+        <Card className="p-5 border border-slate-200 bg-white">
           <div className="flex items-center justify-between mb-3">
             <div>
               <p className="text-xs uppercase tracking-wide text-slate-500">Completion</p>
@@ -75,7 +83,7 @@ export default function ExaminerDashboard() {
 
       <div className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
         <FeatureGate feature="evaluation:view_assigned_evaluations">
-          <Card className="p-6 h-full">
+          <Card className="p-6 h-full border border-slate-200 bg-white">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Evaluation queue</p>
@@ -97,12 +105,12 @@ export default function ExaminerDashboard() {
                       <h3 className="text-base font-semibold text-slate-900">{student.name}</h3>
                       <p className="text-sm text-slate-500">{student.fyp.title}</p>
                       <div className="flex flex-wrap gap-2 mt-3">
-                        <Badge variant="outline" className="text-xs">
-                          {student.fyp.domain}
-                        </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    {student.fyp.domain}
+                  </Badge>
                         <Badge className={completed ? "bg-emerald-500" : "bg-amber-500"}>
                           {completed ? "Evaluated" : "Pending"}
-                        </Badge>
+                  </Badge>
                       </div>
                     </div>
                     <FeatureGate feature={completed ? "evaluation:enter_feedback" : "evaluation:conduct_evaluation"}>
@@ -119,7 +127,7 @@ export default function ExaminerDashboard() {
 
         <div className="space-y-6">
           <FeatureGate feature="evaluation:evaluate_proposal">
-            <Card className="p-6">
+            <Card className="p-6 border border-slate-200 bg-white">
               <div className="flex items-center gap-3 mb-4">
                 <span className="rounded-2xl bg-indigo-50 p-3 text-indigo-600">
                   <Sparkles className="h-5 w-5" />
@@ -141,14 +149,14 @@ export default function ExaminerDashboard() {
                         {window.status}
                       </Badge>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
+            </div>
+          ))}
+        </div>
+      </Card>
           </FeatureGate>
 
           <FeatureGate feature="evaluation:enter_marks">
-            <Card className="p-6">
+            <Card className="p-6 border border-slate-200 bg-white">
               <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Quality signals</p>
               <h3 className="text-lg font-semibold mt-2">Evaluation integrity checklist</h3>
               <ul className="mt-4 space-y-3 text-sm text-slate-600">
@@ -156,6 +164,40 @@ export default function ExaminerDashboard() {
                 <li>• Marks + qualitative feedback submitted together</li>
                 <li>• Internal to external handoff captured in less than 48h</li>
               </ul>
+            </Card>
+          </FeatureGate>
+
+          <FeatureGate feature="evaluation:view_assigned_evaluations">
+            <Card className="p-6 border border-slate-200 bg-white">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Reports</p>
+                  <h3 className="text-lg font-semibold">Latest exports</h3>
+                </div>
+              </div>
+              <div className="space-y-3">
+                {examinerReports.map((report) => (
+                  <div
+                    key={report.id}
+                    className="rounded-2xl border border-slate-100 p-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{report.title}</p>
+                      <p className="text-xs text-slate-500">
+                        {report.id} · Last run {report.lastRun} · Owner: {report.owner}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={Boolean(reportGenerating) && reportGenerating !== report.id}
+                      onClick={() => generateReport(report.id)}
+                    >
+                      {reportGenerating === report.id ? "Preparing..." : "Download"}
+                    </Button>
+                  </div>
+                ))}
+              </div>
             </Card>
           </FeatureGate>
         </div>

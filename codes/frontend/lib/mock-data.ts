@@ -220,3 +220,54 @@ export const clearanceRequests = [
     remarks: "Awaiting submission of final documents",
   },
 ]
+
+export const deanReports = [
+  {
+    id: "REP-AC-101",
+    title: "Academic Clearance Summary",
+    owner: "Dean Office",
+    lastRun: "Nov 26, 2025",
+    status: "Completed",
+  },
+  {
+    id: "REP-AC-209",
+    title: "At-Risk Cohorts (Accounts + SA)",
+    owner: "Insights Bot",
+    lastRun: "Nov 25, 2025",
+    status: "Scheduled",
+  },
+]
+
+export const hodReports = [
+  {
+    id: "REP-DEPT-042",
+    title: "Supervisor Load Snapshot",
+    owner: "Department Ops",
+    lastRun: "Nov 26, 2025",
+    status: "Completed",
+  },
+  {
+    id: "REP-DEPT-058",
+    title: "Pending Department Clearances",
+    owner: "Automation",
+    lastRun: "Nov 26, 2025",
+    status: "Queued",
+  },
+]
+
+export const examinerReports = [
+  {
+    id: "REP-EVAL-310",
+    title: "Proposal Evaluation Outcomes",
+    owner: "Evaluation Suite",
+    lastRun: "Nov 26, 2025",
+    status: "Completed",
+  },
+  {
+    id: "REP-EVAL-415",
+    title: "Upcoming Defense Schedule",
+    owner: "Evaluation Suite",
+    lastRun: "Nov 25, 2025",
+    status: "Scheduled",
+  },
+]

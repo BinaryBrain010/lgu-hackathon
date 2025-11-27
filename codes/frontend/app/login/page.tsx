@@ -82,7 +82,7 @@ export default function LoginPage() {
               <p className="text-sm text-slate-500">
                 Authenticate securely to continue orchestrating journeys.
               </p>
-            </div>
+        </div>
 
             {state.status !== "idle" && (
               <div
@@ -122,7 +122,7 @@ export default function LoginPage() {
                   autoComplete="current-password"
                 />
               </div>
-            </div>
+        </div>
 
             <button
               type="submit"

@@ -4,6 +4,7 @@ import { fypRoutes } from '../modules/fyp';
 import { evaluationRoutes } from '../modules/evaluation';
 import { clearanceRoutes } from '../modules/clearance';
 import { notificationRoutes } from '../modules/notification';
+import { userRoutes } from '../modules/user';
 import { adminRoutes } from '../modules/admin';
 
 export class AppRoutes {
@@ -20,6 +21,7 @@ export class AppRoutes {
     this.router.use('/evaluations', evaluationRoutes);
     this.router.use('/clearance', clearanceRoutes);
     this.router.use('/notifications', notificationRoutes);
+    this.router.use('/user', userRoutes);
     this.router.use('/admin', adminRoutes);
   }
 
