@@ -1,0 +1,233 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  SUPERVISOR
+  EXAMINER
+  HOD
+  DEAN
+  STUDENT_AFFAIRS
+  ACCOUNTS
+  ADMIN
+}
+
+enum FYPStage {
+  IDEA_PENDING
+  IDEA_APPROVED
+  IDEA_REJECTED
+  SUPERVISOR_PENDING
+  SUPERVISOR_ASSIGNED
+  PROPOSAL_PENDING
+  PROPOSAL_APPROVED
+  PROPOSAL_REJECTED
+  SRS_PENDING
+  SRS_APPROVED
+  SRS_REJECTED
+  INTERNAL_PENDING
+  INTERNAL_DONE
+  EXTERNAL_PENDING
+  EXTERNAL_DONE
+  COMPLETED
+}
+
+enum DocumentType {
+  PROPOSAL
+  SRS
+  FINAL
+}
+
+enum EvaluationType {
+  INTERNAL
+  EXTERNAL
+}
+
+enum ClearanceStatus {
+  PENDING
+  IN_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum ClearanceDepartment {
+  DEPARTMENT
+  ACADEMIC
+  STUDENT_AFFAIRS
+  ACCOUNTS
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String
+  firstName     String
+  lastName      String
+  studentId     String?   @unique
+  department    String?
+  role          Role      @default(STUDENT)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  fyps                  FYP[]
+  supervisedFYPs        FYP[]                @relation("SupervisorFYP")
+  evaluations           Evaluation[]
+  clearance             DegreeClearance[]
+  clearanceRemarks      ClearanceRemark[]
+  notifications         Notification[]
+  plagiarismReports     PlagiarismReport[]
+
+  @@map("users")
+}
+
+model FYP {
+  id                String          @id @default(uuid())
+  title             String          @unique
+  description       String?
+  stage             FYPStage        @default(IDEA_PENDING)
+  studentId         String
+  supervisorId      String?
+  ideaApprovedAt    DateTime?
+  proposalApprovedAt DateTime?
+  srsApprovedAt     DateTime?
+  internalCompletedAt DateTime?
+  externalCompletedAt DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  // Relations
+  student             User                @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  supervisor          User?               @relation("SupervisorFYP", fields: [supervisorId], references: [id])
+  documents           FYPDocument[]
+  plagiarismReports   PlagiarismReport[]
+  evaluations         Evaluation[]
+  notifications       Notification[]
+
+  @@index([studentId])
+  @@index([supervisorId])
+  @@index([stage])
+  @@map("fyps")
+}
+
+model FYPDocument {
+  id          String        @id @default(uuid())
+  type        DocumentType
+  fileUrl     String
+  version     Int           @default(1)
+  fypId       String
+  uploadedAt  DateTime      @default(now())
+  createdAt   DateTime      @default(now())
+
+  // Relations
+  fyp         FYP           @relation(fields: [fypId], references: [id], onDelete: Cascade)
+
+  @@index([fypId])
+  @@index([type])
+  @@map("fyp_documents")
+}
+
+model PlagiarismReport {
+  id          String        @id @default(uuid())
+  similarity  Float
+  reportUrl   String
+  fypId       String
+  uploadedById String
+  uploadedAt  DateTime      @default(now())
+  createdAt   DateTime      @default(now())
+
+  // Relations
+  fyp         FYP           @relation(fields: [fypId], references: [id], onDelete: Cascade)
+  uploadedBy  User          @relation(fields: [uploadedById], references: [id])
+
+  @@index([fypId])
+  @@map("plagiarism_reports")
+}
+
+model Evaluation {
+  id          String          @id @default(uuid())
+  marks       Float
+  feedback    String?
+  type        EvaluationType
+  fypId       String
+  evaluatorId String
+  evaluatedAt DateTime        @default(now())
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  // Relations
+  fyp         FYP             @relation(fields: [fypId], references: [id], onDelete: Cascade)
+  evaluator   User            @relation(fields: [evaluatorId], references: [id])
+
+  @@unique([fypId, evaluatorId, type])
+  @@index([fypId])
+  @@index([evaluatorId])
+  @@map("evaluations")
+}
+
+model DegreeClearance {
+  id                String            @id @default(uuid())
+  studentId         String            @unique
+  status            ClearanceStatus   @default(PENDING)
+  departmentStatus  ClearanceStatus   @default(PENDING)
+  academicStatus    ClearanceStatus   @default(PENDING)
+  affairsStatus     ClearanceStatus   @default(PENDING)
+  accountsStatus    ClearanceStatus   @default(PENDING)
+  initiatedAt       DateTime          @default(now())
+  completedAt       DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  // Relations
+  student           User              @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  remarks           ClearanceRemark[]
+
+  @@index([studentId])
+  @@index([status])
+  @@map("degree_clearances")
+}
+
+model ClearanceRemark {
+  id          String              @id @default(uuid())
+  department  ClearanceDepartment
+  message     String
+  clearanceId String
+  officerId   String
+  createdAt   DateTime            @default(now())
+
+  // Relations
+  clearance   DegreeClearance     @relation(fields: [clearanceId], references: [id], onDelete: Cascade)
+  officer     User                @relation(fields: [officerId], references: [id])
+
+  @@index([clearanceId])
+  @@index([department])
+  @@map("clearance_remarks")
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  read      Boolean   @default(false)
+  fypId     String?
+  createdAt DateTime  @default(now())
+
+  // Relations
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fyp       FYP?      @relation(fields: [fypId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([read])
+  @@map("notifications")
+}
+

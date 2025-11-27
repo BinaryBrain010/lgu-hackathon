@@ -1,0 +1,92 @@
+Project Implementation Guidelines
+The FYP & Degree Workflow Automation Portal is a complete academic management system designed to digitize all manual processes, reduce delays, and ensure transparent tracking for:
+Final Year Project (FYP) Lifecycle
+Idea - Supervisor - Proposal - SRS - Internal - External.
+Degree Completion Workflow: Replaces 4 manual clearance forms with a unified automated system
+
+User Roles and Responsibilities
+
+1. Student
+Submit FYP idea.
+Select supervisor.
+Upload Proposal, SRS, Final Documentation.
+Track FYP stage progress.
+Submit Degree Clearance request.
+View multi-department clearance progress.
+Backspace
+Enter
+Shift
+Eind
+
+2. Supervisor
+Approve/reject FYP idea.
+Accept/reject supervisor selection.
+Upload plagiarism & Al similarity reports.
+Approve Proposal readiness.
+Approve SRS.
+Approve Internal stage.
+Forward to the next stage.
+
+3. Internal/External Examiner
+Evaluate Proposal.
+Evaluate SRS.
+Conduct Evaluation.
+Enter marks and feedback
+
+4. HOD
+Verify supervisor assignment.
+Approve FYP enrollment.
+Approve department-level Degree Clearance.
+Deleta
+Backspace
+
+5. Dean/Academic Office
+Approve academic clearance.
+Confirm academic eligibility.
+Enter
+Shift
+
+6. Student Affairs
+Approve hostel/library/lab clearance.
+Validate student activity records.
+
+7. Accounts Office
+Check dues.
+Approve financial clearance.
+
+8. System Admin
+Manage users & permissions.
+Configure workflows.
+Ensure security.
+fore Functional Requirements
+
+1. Authentication & Authorization
+Delete
+Multi-role user system.
+Васкарася
+Secure login,
+Encrypted passwords.
+Role-specific interfaces.
+Ent
+S
+
+2. FYP Management System
+FYP Idea Submission (If duplicate - Reject)
+Supervisor Selection
+Eng
+Enrollment Done
+Proposal Defense Workflow
+SRS Phase
+Internal Evaluation
+External Evaluation
+intel
+RIS
+
+3. Degree Completion Workflow
+Unified Digital Clearance System
+Department Clearance
+Academic Clearance
+Student Affairs Clearance
+Accounts Clearance
+Once complete - Student receives Degree Completion Confirmation.
+
