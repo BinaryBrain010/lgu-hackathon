@@ -17,7 +17,7 @@ export class AuthRoutes {
      * /api/v1/auth/login:
      *   post:
      *     summary: User login
-     *     description: Authenticate user and receive JWT token. Role parameter is optional for development/mock purposes.
+     *     description: Authenticate user and receive JWT token with role-based permissions. Accepts either 'email' or 'username' field (both must be valid email format).
      *     tags: [Authentication]
      *     requestBody:
      *       required: true
@@ -26,19 +26,34 @@ export class AuthRoutes {
      *           schema:
      *             type: object
      *             required:
-     *               - email
      *               - password
      *             properties:
      *               email:
      *                 type: string
      *                 format: email
      *                 example: student1@acadflow.edu
-     *                 description: User email address
+     *                 description: User email address (optional if username is provided)
+     *               username:
+     *                 type: string
+     *                 format: email
+     *                 example: student1@acadflow.edu
+     *                 description: User email/username (optional if email is provided)
      *               password:
      *                 type: string
      *                 format: password
      *                 example: student123
      *                 description: User password
+     *           examples:
+     *             emailLogin:
+     *               summary: Login with email
+     *               value:
+     *                 email: student1@acadflow.edu
+     *                 password: student123
+     *             usernameLogin:
+     *               summary: Login with username
+     *               value:
+     *                 username: student1@acadflow.edu
+     *                 password: student123
      *     responses:
      *       200:
      *         description: Login successful
@@ -67,14 +82,21 @@ export class AuthRoutes {
      *                           type: string
      *                         role:
      *                           type: string
+     *                           enum: [STUDENT, SUPERVISOR, EXAMINER, HOD, DEAN, STUDENT_AFFAIRS, ACCOUNTS, ADMIN]
      *                     token:
      *                       type: string
      *                       description: JWT authentication token
+     *                     permissions:
+     *                       type: array
+     *                       items:
+     *                         type: string
+     *                       description: Array of role-based permissions in format 'resource:action'
+     *                       example: ["fyp:submit_idea", "fyp:select_supervisor", "clearance:submit_request"]
      *                 message:
      *                   type: string
      *                   example: Login successful
      *       400:
-     *         description: Validation error
+     *         description: Validation error - Either email or username is required
      *       401:
      *         description: Invalid credentials
      */

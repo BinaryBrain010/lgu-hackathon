@@ -3,26 +3,32 @@
 import { useActionState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowRight, GraduationCap, Loader2, LockKeyhole, Mail, Shield } from "lucide-react"
-import { loginAction, initialLoginState } from "./actions"
+import { normalizeRoleKey, type RoleKey } from "@/lib/permissions"
+import { loginAction } from "./actions"
 
-const roleRoutes: Record<string, string> = {
+const roleRoutes: Record<RoleKey, string> = {
   STUDENT: "/student",
   SUPERVISOR: "/supervisor",
   EXAMINER: "/examiner",
   HOD: "/hod",
   DEAN: "/dean",
-  "STUDENT-AFFAIRS": "/student-affairs",
+  STUDENT_AFFAIRS: "/student-affairs",
   ACCOUNTS: "/accounts",
   ADMIN: "/admin",
 }
 
+const loginInitialState = {
+  status: "idle" as const,
+}
+
 export default function LoginPage() {
   const router = useRouter()
-  const [state, formAction, pending] = useActionState(loginAction, initialLoginState)
+  const [state, formAction, pending] = useActionState(loginAction, loginInitialState)
 
   useEffect(() => {
     if (state.status === "success" && state.user) {
-      const destination = roleRoutes[state.user.role] ?? "/"
+      const roleKey = normalizeRoleKey(state.user.role)
+      const destination = (roleKey && roleRoutes[roleKey]) ?? "/"
       router.push(destination)
     }
   }, [state, router])
@@ -65,7 +71,8 @@ export default function LoginPage() {
               <li>• Automated compliance logs and alerting</li>
             </ul>
             <div className="rounded-2xl border border-white/15 bg-white/5 p-4 text-sm text-white/80">
-              Demo ready: use the credentials prefilled in the form or swap in your own sandbox user.
+              Connect with your trusted institutional identity provider for seamless and compliant access across every
+              clearance workflow.
             </div>
           </div>
 
@@ -92,10 +99,11 @@ export default function LoginPage() {
                 <input
                   name="username"
                   type="email"
-                  defaultValue="student1@acadflow.edu"
                   className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
                   placeholder="name@acadflow.edu"
                   disabled={pending}
+                  required
+                  autoComplete="email"
                 />
               </div>
             </div>
@@ -107,10 +115,11 @@ export default function LoginPage() {
                 <input
                   name="password"
                   type="password"
-                  defaultValue="student123"
                   className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
                   placeholder="Enter password"
                   disabled={pending}
+                  required
+                  autoComplete="current-password"
                 />
               </div>
             </div>

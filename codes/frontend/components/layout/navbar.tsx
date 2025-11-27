@@ -8,12 +8,15 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { notifications } from "@/lib/mock-data"
 import { useState } from "react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { useFeatureFlags, hasFeature } from "@/hooks/use-feature-flags"
 
 export function Navbar() {
   const user = useAuthStore((state) => state.user)
   const pathname = usePathname()
   const [isDark, setIsDark] = useState(false)
-  const unreadCount = notifications.filter((n) => !n.read).length
+  const features = useFeatureFlags()
+  const canViewNotifications = hasFeature(features, "notifications:view")
+  const unreadCount = canViewNotifications ? notifications.filter((n) => !n.read).length : 0
 
   if (!user || pathname === "/login") return null
 
@@ -33,49 +36,51 @@ export function Navbar() {
       </div>
 
       <div className="flex items-center gap-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="w-5 h-5" />
-              {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-semibold">
-                  {unreadCount}
-                </span>
-              )}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80">
-            <div className="p-4 border-b">
-              <p className="text-sm font-semibold text-gray-900">Notifications</p>
-            </div>
-            <div className="max-h-96 overflow-y-auto">
-              {notifications.length === 0 ? (
-                <div className="p-4 text-center text-sm text-gray-500">No notifications</div>
-              ) : (
-                notifications.map((notif) => (
-                  <div
-                    key={notif.id}
-                    className={`p-3 border-b text-sm cursor-pointer hover:bg-gray-50 ${
-                      !notif.read ? "bg-blue-50" : ""
-                    }`}
-                  >
-                    <div className="flex gap-2">
-                      <div
-                        className={`w-2 h-2 rounded-full mt-1 flex-shrink-0 ${
-                          notif.read ? "bg-gray-300" : "bg-blue-500"
-                        }`}
-                      />
-                      <div className="flex-1">
-                        <p className="text-gray-900 font-medium">{notif.message}</p>
-                        <p className="text-xs text-gray-500 mt-1">{notif.timestamp}</p>
+        {canViewNotifications && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="w-5 h-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-semibold">
+                    {unreadCount}
+                  </span>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80">
+              <div className="p-4 border-b">
+                <p className="text-sm font-semibold text-gray-900">Notifications</p>
+              </div>
+              <div className="max-h-96 overflow-y-auto">
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-center text-sm text-gray-500">No notifications</div>
+                ) : (
+                  notifications.map((notif) => (
+                    <div
+                      key={notif.id}
+                      className={`p-3 border-b text-sm cursor-pointer hover:bg-gray-50 ${
+                        !notif.read ? "bg-blue-50" : ""
+                      }`}
+                    >
+                      <div className="flex gap-2">
+                        <div
+                          className={`w-2 h-2 rounded-full mt-1 flex-shrink-0 ${
+                            notif.read ? "bg-gray-300" : "bg-blue-500"
+                          }`}
+                        />
+                        <div className="flex-1">
+                          <p className="text-gray-900 font-medium">{notif.message}</p>
+                          <p className="text-xs text-gray-500 mt-1">{notif.timestamp}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </DropdownMenuContent>
-        </DropdownMenu>
+                  ))
+                )}
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
 
         {/* Dark mode toggle */}
         <Button variant="ghost" size="icon" onClick={() => setIsDark(!isDark)}>

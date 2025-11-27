@@ -4,83 +4,162 @@ import { supervisorStudents } from "@/lib/mock-data"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { FileText, CheckCircle, Clock } from "lucide-react"
+import { Progress } from "@/components/ui/progress"
+import { FeatureGate } from "@/components/access/feature-gate"
+import { CheckCircle2, ClipboardList, Clock, Sparkles, TrendingUp } from "lucide-react"
+
+const evaluationWindows = [
+  { label: "Proposal defense", due: "Nov 28", status: "In progress" },
+  { label: "SRS evaluation", due: "Dec 02", status: "Queued" },
+  { label: "Final defense", due: "Dec 10", status: "Scheduled" },
+]
 
 export default function ExaminerDashboard() {
   const assignedFYPs = supervisorStudents.length
-  const evaluated = Math.floor(assignedFYPs / 2)
+  const evaluated = Math.floor(assignedFYPs / 3)
   const pending = assignedFYPs - evaluated
+  const completion = assignedFYPs > 0 ? Math.round((evaluated / assignedFYPs) * 100) : 0
 
   return (
-    <div className="space-y-6">
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4">
-          <div className="flex items-start justify-between">
+    <div className="space-y-8">
+      <header className="space-y-3">
+        <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Examiner console</p>
+        <h1 className="text-3xl font-semibold text-slate-900">Stay ahead of every evaluation window.</h1>
+        <p className="text-sm text-slate-500">
+          Monitor assigned journeys, capture decisions, and keep internal/external committees in sync.
+        </p>
+      </header>
+
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card className="p-5 bg-slate-900 text-white">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-gray-600 mb-1">Assigned FYPs</p>
-              <p className="text-2xl font-bold text-gray-900">{assignedFYPs}</p>
+              <p className="text-xs uppercase tracking-wide text-white/60">Assigned FYPs</p>
+              <p className="text-3xl font-semibold mt-1">{assignedFYPs}</p>
             </div>
-            <FileText className="w-5 h-5 text-blue-500" />
+            <ClipboardList className="h-6 w-6 text-slate-200" />
           </div>
         </Card>
 
-        <Card className="p-4">
-          <div className="flex items-start justify-between">
+        <Card className="p-5">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-gray-600 mb-1">Evaluated</p>
-              <p className="text-2xl font-bold text-gray-900">{evaluated}</p>
+              <p className="text-xs uppercase tracking-wide text-slate-500">Evaluated</p>
+              <p className="text-3xl font-semibold mt-1 text-emerald-600">{evaluated}</p>
             </div>
-            <CheckCircle className="w-5 h-5 text-green-500" />
+            <CheckCircle2 className="h-6 w-6 text-emerald-500" />
           </div>
         </Card>
 
-        <Card className="p-4">
-          <div className="flex items-start justify-between">
+        <Card className="p-5">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-gray-600 mb-1">Pending</p>
-              <p className="text-2xl font-bold text-gray-900">{pending}</p>
+              <p className="text-xs uppercase tracking-wide text-slate-500">Pending</p>
+              <p className="text-3xl font-semibold mt-1 text-amber-600">{pending}</p>
             </div>
-            <Clock className="w-5 h-5 text-orange-500" />
+            <Clock className="h-6 w-6 text-amber-500" />
           </div>
         </Card>
 
-        <Card className="p-4">
-          <div className="flex items-start justify-between">
+        <Card className="p-5">
+          <div className="flex items-center justify-between mb-3">
             <div>
-              <p className="text-xs text-gray-600 mb-1">Completion</p>
-              <p className="text-2xl font-bold text-gray-900">{Math.round((evaluated / assignedFYPs) * 100)}%</p>
+              <p className="text-xs uppercase tracking-wide text-slate-500">Completion</p>
+              <p className="text-3xl font-semibold mt-1 text-indigo-600">{completion}%</p>
             </div>
-            <CheckCircle className="w-5 h-5 text-indigo-500" />
+            <TrendingUp className="h-6 w-6 text-indigo-500" />
           </div>
+          <Progress value={completion} className="h-2" />
         </Card>
       </div>
 
-      {/* Assigned FYPs */}
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Assigned FYPs for Evaluation</h3>
-        <div className="space-y-3">
-          {supervisorStudents.map((student, idx) => (
-            <div key={student.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <div className="flex-1">
-                <h4 className="font-medium text-gray-900">{student.name}</h4>
-                <p className="text-sm text-gray-600">{student.fyp.title}</p>
-                <div className="flex gap-2 mt-2">
-                  <Badge variant="outline" className="text-xs">
-                    {student.fyp.domain}
-                  </Badge>
-                  <Badge className={idx < evaluated ? "bg-green-500" : "bg-yellow-500"}>
-                    {idx < evaluated ? "Evaluated" : "Pending"}
-                  </Badge>
+      <div className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
+        <FeatureGate feature="evaluation:view_assigned_evaluations">
+          <Card className="p-6 h-full">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Evaluation queue</p>
+                <h2 className="text-2xl font-semibold text-slate-900">Assigned FYPs</h2>
+              </div>
+              <Badge variant="outline" className="text-xs">
+                {pending} pending
+              </Badge>
+            </div>
+            <div className="space-y-4">
+              {supervisorStudents.map((student, idx) => {
+                const completed = idx < evaluated
+                return (
+                  <div
+                    key={student.id}
+                    className="rounded-2xl border border-slate-200 p-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
+                  >
+                    <div>
+                      <h3 className="text-base font-semibold text-slate-900">{student.name}</h3>
+                      <p className="text-sm text-slate-500">{student.fyp.title}</p>
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        <Badge variant="outline" className="text-xs">
+                          {student.fyp.domain}
+                        </Badge>
+                        <Badge className={completed ? "bg-emerald-500" : "bg-amber-500"}>
+                          {completed ? "Evaluated" : "Pending"}
+                        </Badge>
+                      </div>
+                    </div>
+                    <FeatureGate feature={completed ? "evaluation:enter_feedback" : "evaluation:conduct_evaluation"}>
+                      <Button size="sm" variant={completed ? "outline" : "default"}>
+                        {completed ? "View Evaluation" : "Evaluate"}
+                      </Button>
+                    </FeatureGate>
+                  </div>
+                )
+              })}
+            </div>
+          </Card>
+        </FeatureGate>
+
+        <div className="space-y-6">
+          <FeatureGate feature="evaluation:evaluate_proposal">
+            <Card className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="rounded-2xl bg-indigo-50 p-3 text-indigo-600">
+                  <Sparkles className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Next milestones</p>
+                  <h3 className="text-lg font-semibold">Evaluation timeline</h3>
                 </div>
               </div>
-              <Button size="sm" variant={idx < evaluated ? "outline" : "default"}>
-                {idx < evaluated ? "View Evaluation" : "Evaluate"}
-              </Button>
-            </div>
-          ))}
+              <div className="space-y-3">
+                {evaluationWindows.map((window) => (
+                  <div key={window.label} className="rounded-2xl border border-slate-100 p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">{window.label}</p>
+                        <p className="text-xs text-slate-500">Due {window.due}</p>
+                      </div>
+                      <Badge variant="outline" className="text-xs">
+                        {window.status}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </FeatureGate>
+
+          <FeatureGate feature="evaluation:enter_marks">
+            <Card className="p-6">
+              <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Quality signals</p>
+              <h3 className="text-lg font-semibold mt-2">Evaluation integrity checklist</h3>
+              <ul className="mt-4 space-y-3 text-sm text-slate-600">
+                <li>• Plagiarism & AI similarity reports attached before scoring</li>
+                <li>• Marks + qualitative feedback submitted together</li>
+                <li>• Internal to external handoff captured in less than 48h</li>
+              </ul>
+            </Card>
+          </FeatureGate>
         </div>
-      </Card>
+      </div>
     </div>
   )
 }

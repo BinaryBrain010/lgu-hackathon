@@ -1,4 +1,5 @@
 import { create } from "zustand"
+import { FEATURE_COOKIE_KEY, getDefaultPermissionsForRole } from "./permissions"
 
 export type UserRole = "student" | "supervisor" | "examiner" | "hod" | "dean" | "student-affairs" | "accounts" | "admin"
 
@@ -84,12 +85,29 @@ const mockUsers: Record<UserRole, User> = {
   },
 }
 
+function setCookie(name: string, value: string, maxAgeSeconds = 60 * 60 * 24) {
+  if (typeof document === "undefined") return
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAgeSeconds}`
+}
+
+function clearCookie(name: string) {
+  if (typeof document === "undefined") return
+  document.cookie = `${name}=; path=/; max-age=0`
+}
+
 export const useAuthStore = create<AuthStore>((set) => ({
   user: null,
   login: (role: UserRole) => {
-    set({ user: mockUsers[role] })
+    const user = mockUsers[role]
+    set({ user })
+    const permissions = getDefaultPermissionsForRole(role)
+    setCookie("acadflow_user", JSON.stringify(user))
+    setCookie(FEATURE_COOKIE_KEY, JSON.stringify(permissions))
   },
   logout: () => {
     set({ user: null })
+    clearCookie("acadflow_user")
+    clearCookie("acadflow_token")
+    clearCookie(FEATURE_COOKIE_KEY)
   },
 }))

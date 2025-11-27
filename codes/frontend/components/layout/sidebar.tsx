@@ -9,47 +9,156 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { LayoutDashboard, FileText, Users, CheckCircle, Settings, LogOut, Menu, X } from "lucide-react"
 import { useState } from "react"
+import { useFeatureFlags, hasFeature } from "@/hooks/use-feature-flags"
+import type { FeaturePermission } from "@/lib/permissions"
 
-const navItems: Record<string, Array<{ label: string; href: string; icon: React.ReactNode }>> = {
+type NavItem = {
+  label: string
+  href: string
+  icon: React.ReactNode
+  feature?: FeaturePermission | FeaturePermission[]
+  mode?: "any" | "all"
+}
+
+const navItems: Record<string, NavItem[]> = {
   student: [
-    { label: "Dashboard", href: "/student", icon: <LayoutDashboard className="w-4 h-4" /> },
-    { label: "FYP Idea", href: "/student/fyp/idea", icon: <FileText className="w-4 h-4" /> },
-    { label: "Supervisor", href: "/student/fyp/supervisor", icon: <Users className="w-4 h-4" /> },
-    { label: "Proposal", href: "/student/fyp/proposal", icon: <FileText className="w-4 h-4" /> },
-    { label: "SRS Document", href: "/student/fyp/srs", icon: <FileText className="w-4 h-4" /> },
-    { label: "Degree Clearance", href: "/student/clearance", icon: <CheckCircle className="w-4 h-4" /> },
+    { label: "Dashboard", href: "/student", icon: <LayoutDashboard className="w-4 h-4" />, feature: "fyp:view_own_fyp" },
+    { label: "FYP Idea", href: "/student/fyp/idea", icon: <FileText className="w-4 h-4" />, feature: "fyp:submit_idea" },
+    { label: "Supervisor", href: "/student/fyp/supervisor", icon: <Users className="w-4 h-4" />, feature: "fyp:select_supervisor" },
+    { label: "Proposal", href: "/student/fyp/proposal", icon: <FileText className="w-4 h-4" />, feature: "fyp:upload_proposal" },
+    { label: "SRS Document", href: "/student/fyp/srs", icon: <FileText className="w-4 h-4" />, feature: "fyp:upload_srs" },
+    {
+      label: "Degree Clearance",
+      href: "/student/clearance",
+      icon: <CheckCircle className="w-4 h-4" />,
+      feature: ["clearance:view_own_clearance", "clearance:view_multi_department_progress"],
+      mode: "any",
+    },
   ],
   supervisor: [
-    { label: "Dashboard", href: "/supervisor", icon: <LayoutDashboard className="w-4 h-4" /> },
-    { label: "My Students", href: "/supervisor/students", icon: <Users className="w-4 h-4" /> },
-    { label: "Evaluations", href: "/supervisor/evaluations", icon: <CheckCircle className="w-4 h-4" /> },
+    {
+      label: "Dashboard",
+      href: "/supervisor",
+      icon: <LayoutDashboard className="w-4 h-4" />,
+      feature: "fyp:view_assigned_fyps",
+    },
+    {
+      label: "My Students",
+      href: "/supervisor/students",
+      icon: <Users className="w-4 h-4" />,
+      feature: "fyp:view_assigned_fyps",
+    },
+    {
+      label: "Evaluations",
+      href: "/supervisor/evaluations",
+      icon: <CheckCircle className="w-4 h-4" />,
+      feature: ["fyp:approve_proposal_readiness", "fyp:approve_internal_stage"],
+      mode: "any",
+    },
   ],
   examiner: [
-    { label: "Dashboard", href: "/examiner", icon: <LayoutDashboard className="w-4 h-4" /> },
-    { label: "Assigned FYPs", href: "/examiner/fyps", icon: <FileText className="w-4 h-4" /> },
-    { label: "Evaluations", href: "/examiner/evaluations", icon: <CheckCircle className="w-4 h-4" /> },
+    {
+      label: "Dashboard",
+      href: "/examiner",
+      icon: <LayoutDashboard className="w-4 h-4" />,
+      feature: "evaluation:view_assigned_evaluations",
+    },
+    {
+      label: "Assigned FYPs",
+      href: "/examiner/fyps",
+      icon: <FileText className="w-4 h-4" />,
+      feature: "fyp:view_assigned_fyps",
+    },
+    {
+      label: "Evaluations",
+      href: "/examiner/evaluations",
+      icon: <CheckCircle className="w-4 h-4" />,
+      feature: ["evaluation:evaluate_proposal", "evaluation:evaluate_srs"],
+      mode: "any",
+    },
   ],
   hod: [
-    { label: "Dashboard", href: "/hod", icon: <LayoutDashboard className="w-4 h-4" /> },
-    { label: "Clearances", href: "/hod/clearances", icon: <CheckCircle className="w-4 h-4" /> },
-    { label: "Students", href: "/hod/students", icon: <Users className="w-4 h-4" /> },
+    {
+      label: "Dashboard",
+      href: "/hod",
+      icon: <LayoutDashboard className="w-4 h-4" />,
+      feature: "fyp:view_all_fyps",
+    },
+    {
+      label: "Clearances",
+      href: "/hod/clearances",
+      icon: <CheckCircle className="w-4 h-4" />,
+      feature: "clearance:view_all_clearances",
+    },
+    {
+      label: "Students",
+      href: "/hod/students",
+      icon: <Users className="w-4 h-4" />,
+      feature: "fyp:view_all_fyps",
+    },
   ],
   dean: [
-    { label: "Dashboard", href: "/dean", icon: <LayoutDashboard className="w-4 h-4" /> },
-    { label: "Clearances", href: "/dean/clearances", icon: <CheckCircle className="w-4 h-4" /> },
+    {
+      label: "Dashboard",
+      href: "/dean",
+      icon: <LayoutDashboard className="w-4 h-4" />,
+      feature: "clearance:view_all_clearances",
+    },
+    {
+      label: "Clearances",
+      href: "/dean/clearances",
+      icon: <CheckCircle className="w-4 h-4" />,
+      feature: "clearance:view_all_clearances",
+    },
   ],
   "student-affairs": [
-    { label: "Dashboard", href: "/student-affairs", icon: <LayoutDashboard className="w-4 h-4" /> },
-    { label: "Clearances", href: "/student-affairs/clearances", icon: <CheckCircle className="w-4 h-4" /> },
+    {
+      label: "Dashboard",
+      href: "/student-affairs",
+      icon: <LayoutDashboard className="w-4 h-4" />,
+      feature: "clearance:view_all_clearances",
+    },
+    {
+      label: "Clearances",
+      href: "/student-affairs/clearances",
+      icon: <CheckCircle className="w-4 h-4" />,
+      feature: "clearance:view_all_clearances",
+    },
   ],
   accounts: [
-    { label: "Dashboard", href: "/accounts", icon: <LayoutDashboard className="w-4 h-4" /> },
-    { label: "Clearances", href: "/accounts/clearances", icon: <CheckCircle className="w-4 h-4" /> },
+    {
+      label: "Dashboard",
+      href: "/accounts",
+      icon: <LayoutDashboard className="w-4 h-4" />,
+      feature: "clearance:view_all_clearances",
+    },
+    {
+      label: "Clearances",
+      href: "/accounts/clearances",
+      icon: <CheckCircle className="w-4 h-4" />,
+      feature: "clearance:view_all_clearances",
+    },
   ],
   admin: [
-    { label: "Dashboard", href: "/admin", icon: <LayoutDashboard className="w-4 h-4" /> },
-    { label: "Users", href: "/admin/users", icon: <Users className="w-4 h-4" /> },
-    { label: "Settings", href: "/admin/settings", icon: <Settings className="w-4 h-4" /> },
+    {
+      label: "Dashboard",
+      href: "/admin",
+      icon: <LayoutDashboard className="w-4 h-4" />,
+      feature: ["admin:view_analytics", "admin:manage_users"],
+      mode: "any",
+    },
+    {
+      label: "Users",
+      href: "/admin/users",
+      icon: <Users className="w-4 h-4" />,
+      feature: "admin:manage_users",
+    },
+    {
+      label: "Settings",
+      href: "/admin/settings",
+      icon: <Settings className="w-4 h-4" />,
+      feature: "admin:configure_workflows",
+    },
   ],
 }
 
@@ -58,10 +167,14 @@ export function Sidebar() {
   const logout = useAuthStore((state) => state.logout)
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
+  const featureFlags = useFeatureFlags()
 
   if (!user || pathname === "/login") return null
 
-  const items = navItems[user.role] || []
+  const items = (navItems[user.role] || []).filter((item) => {
+    if (!item.feature) return true
+    return hasFeature(featureFlags, item.feature, item.mode)
+  })
 
   return (
     <>
@@ -96,20 +209,24 @@ export function Sidebar() {
 
           {/* Navigation */}
           <nav className="flex-1 space-y-2">
-            {items.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setIsOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
-                  pathname === item.href ? "bg-blue-600 text-white" : "text-gray-300 hover:bg-gray-800",
-                )}
-              >
-                {item.icon}
-                <span className="text-sm">{item.label}</span>
-              </Link>
-            ))}
+            {items.length === 0 ? (
+              <p className="text-xs text-gray-500">No modules available for your current permissions.</p>
+            ) : (
+              items.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setIsOpen(false)}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+                    pathname === item.href ? "bg-blue-600 text-white" : "text-gray-300 hover:bg-gray-800",
+                  )}
+                >
+                  {item.icon}
+                  <span className="text-sm">{item.label}</span>
+                </Link>
+              ))
+            )}
           </nav>
 
           {/* Logout */}
