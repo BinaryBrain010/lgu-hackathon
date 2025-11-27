@@ -1,94 +1,138 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import { useActionState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useAuthStore, type UserRole } from "@/lib/store"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { GraduationCap, Users, FileCheck, Settings } from "lucide-react"
+import { ArrowRight, GraduationCap, Loader2, LockKeyhole, Mail, Shield } from "lucide-react"
+import { loginAction, initialLoginState } from "./actions"
 
-const roles: Array<{ role: UserRole; label: string; icon: React.ReactNode; description: string }> = [
-  { role: "student", label: "Student", icon: <GraduationCap className="w-5 h-5" />, description: "View FYP progress" },
-  { role: "supervisor", label: "Supervisor", icon: <Users className="w-5 h-5" />, description: "Manage students" },
-  { role: "examiner", label: "Examiner", icon: <FileCheck className="w-5 h-5" />, description: "Evaluate FYPs" },
-  { role: "hod", label: "HOD", icon: <Settings className="w-5 h-5" />, description: "Department admin" },
-  { role: "dean", label: "Dean", icon: <Settings className="w-5 h-5" />, description: "Academic office" },
-  {
-    role: "student-affairs",
-    label: "Student Affairs",
-    icon: <Users className="w-5 h-5" />,
-    description: "Student services",
-  },
-  { role: "accounts", label: "Accounts", icon: <FileCheck className="w-5 h-5" />, description: "Finance clearance" },
-  { role: "admin", label: "Admin", icon: <Settings className="w-5 h-5" />, description: "System admin" },
-]
+const roleRoutes: Record<string, string> = {
+  STUDENT: "/student",
+  SUPERVISOR: "/supervisor",
+  EXAMINER: "/examiner",
+  HOD: "/hod",
+  DEAN: "/dean",
+  "STUDENT-AFFAIRS": "/student-affairs",
+  ACCOUNTS: "/accounts",
+  ADMIN: "/admin",
+}
 
 export default function LoginPage() {
   const router = useRouter()
-  const login = useAuthStore((state) => state.login)
-  const [hoveredRole, setHoveredRole] = useState<UserRole | null>(null)
+  const [state, formAction, pending] = useActionState(loginAction, initialLoginState)
 
-  const handleLogin = (role: UserRole) => {
-    login(role)
-    // Route based on role
-    const roleRoutes: Record<UserRole, string> = {
-      student: "/student",
-      supervisor: "/supervisor",
-      examiner: "/examiner",
-      hod: "/hod",
-      dean: "/dean",
-      "student-affairs": "/student-affairs",
-      accounts: "/accounts",
-      admin: "/admin",
+  useEffect(() => {
+    if (state.status === "success" && state.user) {
+      const destination = roleRoutes[state.user.role] ?? "/"
+      router.push(destination)
     }
-    router.push(roleRoutes[role])
-  }
+  }, [state, router])
+
+  const success =
+    state.status === "success" ? "border-emerald-300 bg-emerald-50 text-emerald-800" : "border-transparent"
+  const error =
+    state.status === "error" ? "border-red-300 bg-red-50 text-red-800" : "border-transparent text-slate-500"
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-5xl">
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <GraduationCap className="w-8 h-8 text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900">AcadFlow</h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white">
+      <div className="mx-auto flex min-h-screen max-w-5xl flex-col gap-10 px-6 py-12">
+        <header className="text-center space-y-4">
+          <div className="inline-flex items-center gap-3 rounded-full border border-white/20 bg-white/5 px-5 py-2 text-sm">
+            <Shield className="h-4 w-4 text-sky-300" />
+            Secure AcadFlow access
           </div>
-          <p className="text-gray-600">FYP & Degree Workflow Automation Portal</p>
-        </div>
+          <div className="space-y-3">
+            <h1 className="text-4xl font-semibold">Sign in to your workflow console</h1>
+            <p className="text-white/70">
+              One login unlocks FYP tracking, multi-department clearances, and compliance-ready automations.
+            </p>
+          </div>
+        </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {roles.map(({ role, label, icon, description }) => (
-            <Card
-              key={role}
-              className={`p-6 cursor-pointer transition-all duration-300 ${
-                hoveredRole === role ? "ring-2 ring-blue-500 shadow-lg" : "hover:shadow-md"
-              }`}
-              onMouseEnter={() => setHoveredRole(role)}
-              onMouseLeave={() => setHoveredRole(null)}
-            >
-              <div className="flex flex-col items-center gap-3 h-full">
-                <div className="p-3 bg-blue-100 rounded-lg text-blue-600">{icon}</div>
-                <h3 className="font-semibold text-gray-900 text-center">{label}</h3>
-                <p className="text-xs text-gray-600 text-center">{description}</p>
-                <Button
-                  className="mt-auto w-full"
-                  onClick={() => handleLogin(role)}
-                  variant={hoveredRole === role ? "default" : "outline"}
-                >
-                  Login
-                </Button>
+        <div className="grid gap-8 rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-lg md:grid-cols-2">
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="rounded-2xl bg-white/10 p-3">
+                <GraduationCap className="h-6 w-6 text-sky-300" />
               </div>
-            </Card>
-          ))}
-        </div>
+              <div>
+                <p className="text-sm uppercase tracking-[0.3em] text-white/60">AcadFlow Portal</p>
+                <h2 className="text-2xl font-semibold">Trusted login for modern campuses</h2>
+              </div>
+            </div>
+            <ul className="space-y-3 text-sm text-white/70">
+              <li>• Realtime visibility into every approval chain</li>
+              <li>• Single identity across students, supervisors, and admin desks</li>
+              <li>• Automated compliance logs and alerting</li>
+            </ul>
+            <div className="rounded-2xl border border-white/15 bg-white/5 p-4 text-sm text-white/80">
+              Demo ready: use the credentials prefilled in the form or swap in your own sandbox user.
+            </div>
+          </div>
 
-        <div className="mt-12 p-6 bg-white rounded-lg shadow-sm border border-gray-200">
-          <h3 className="font-semibold text-gray-900 mb-2">Demo Information</h3>
-          <p className="text-sm text-gray-600">
-            Select any role above to login as that user. This is a mock application demonstrating the FYP & Degree
-            Workflow system with realistic data for demonstration purposes.
-          </p>
+          <form action={formAction} className="space-y-6 rounded-2xl bg-white/90 p-6 text-slate-900 shadow-xl">
+            <div className="space-y-2 text-center">
+              <h3 className="text-2xl font-semibold text-slate-900">Welcome back</h3>
+              <p className="text-sm text-slate-500">
+                Authenticate securely to continue orchestrating journeys.
+              </p>
+            </div>
+
+            {state.status !== "idle" && (
+              <div
+                className={`rounded-2xl border px-4 py-3 text-sm transition ${state.status === "success" ? success : error}`}
+              >
+                {state.status === "success" ? state.message ?? "Login successful" : state.message ?? "Login failed"}
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <label className="block text-sm font-medium text-slate-700">Email address</label>
+              <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                <Mail className="h-5 w-5 text-slate-400" />
+                <input
+                  name="username"
+                  type="email"
+                  defaultValue="student1@acadflow.edu"
+                  className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
+                  placeholder="name@acadflow.edu"
+                  disabled={pending}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <label className="block text-sm font-medium text-slate-700">Password</label>
+              <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                <LockKeyhole className="h-5 w-5 text-slate-400" />
+                <input
+                  name="password"
+                  type="password"
+                  defaultValue="student123"
+                  className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
+                  placeholder="Enter password"
+                  disabled={pending}
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={pending}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+            >
+              {pending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Authenticating
+                </>
+              ) : (
+                <>
+                  Continue
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
+            </button>
+          </form>
         </div>
       </div>
     </div>
