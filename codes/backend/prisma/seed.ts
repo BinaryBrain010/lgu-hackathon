@@ -196,49 +196,55 @@ async function main() {
         supervisorId: stage !== FYPStage.IDEA_PENDING && stage !== FYPStage.IDEA_APPROVED 
           ? supervisor.id 
           : null,
-        ideaApprovedAt: [
-          FYPStage.SUPERVISOR_ASSIGNED,
-          FYPStage.PROPOSAL_PENDING,
-          FYPStage.PROPOSAL_APPROVED,
-          FYPStage.SRS_PENDING,
-          FYPStage.SRS_APPROVED,
-          FYPStage.INTERNAL_PENDING,
-          FYPStage.INTERNAL_DONE,
-          FYPStage.EXTERNAL_PENDING,
-          FYPStage.EXTERNAL_DONE,
-          FYPStage.COMPLETED,
-        ].includes(stage) ? new Date() : null,
-        proposalApprovedAt: [
-          FYPStage.SRS_PENDING,
-          FYPStage.SRS_APPROVED,
-          FYPStage.INTERNAL_PENDING,
-          FYPStage.INTERNAL_DONE,
-          FYPStage.EXTERNAL_PENDING,
-          FYPStage.EXTERNAL_DONE,
-          FYPStage.COMPLETED,
-        ].includes(stage) ? new Date() : null,
-        srsApprovedAt: [
-          FYPStage.INTERNAL_PENDING,
-          FYPStage.INTERNAL_DONE,
-          FYPStage.EXTERNAL_PENDING,
-          FYPStage.EXTERNAL_DONE,
-          FYPStage.COMPLETED,
-        ].includes(stage) ? new Date() : null,
-        internalCompletedAt: [
-          FYPStage.EXTERNAL_PENDING,
-          FYPStage.EXTERNAL_DONE,
-          FYPStage.COMPLETED,
-        ].includes(stage) ? new Date() : null,
-        externalCompletedAt: [
-          FYPStage.COMPLETED,
-        ].includes(stage) ? new Date() : null,
+        ideaApprovedAt: (
+          [
+            FYPStage.SUPERVISOR_ASSIGNED,
+            FYPStage.PROPOSAL_PENDING,
+            FYPStage.PROPOSAL_APPROVED,
+            FYPStage.SRS_PENDING,
+            FYPStage.SRS_APPROVED,
+            FYPStage.INTERNAL_PENDING,
+            FYPStage.INTERNAL_DONE,
+            FYPStage.EXTERNAL_PENDING,
+            FYPStage.EXTERNAL_DONE,
+            FYPStage.COMPLETED,
+          ] as FYPStage[]
+        ).includes(stage) ? new Date() : null,
+        proposalApprovedAt: (
+          [
+            FYPStage.SRS_PENDING,
+            FYPStage.SRS_APPROVED,
+            FYPStage.INTERNAL_PENDING,
+            FYPStage.INTERNAL_DONE,
+            FYPStage.EXTERNAL_PENDING,
+            FYPStage.EXTERNAL_DONE,
+            FYPStage.COMPLETED,
+          ] as FYPStage[]
+        ).includes(stage) ? new Date() : null,
+        srsApprovedAt: (
+          [
+            FYPStage.INTERNAL_PENDING,
+            FYPStage.INTERNAL_DONE,
+            FYPStage.EXTERNAL_PENDING,
+            FYPStage.EXTERNAL_DONE,
+            FYPStage.COMPLETED,
+          ] as FYPStage[]
+        ).includes(stage) ? new Date() : null,
+        internalCompletedAt: (
+          [
+            FYPStage.EXTERNAL_PENDING,
+            FYPStage.EXTERNAL_DONE,
+            FYPStage.COMPLETED,
+          ] as FYPStage[]
+        ).includes(stage) ? new Date() : null,
+        externalCompletedAt: stage === FYPStage.COMPLETED ? new Date() : null,
         completedAt: stage === FYPStage.COMPLETED ? new Date() : null,
       },
     });
     fyps.push(fyp);
 
     // Add documents for FYPs in later stages
-    if ([FYPStage.PROPOSAL_PENDING, FYPStage.PROPOSAL_APPROVED, FYPStage.SRS_PENDING].includes(stage)) {
+    if (([FYPStage.PROPOSAL_PENDING, FYPStage.PROPOSAL_APPROVED, FYPStage.SRS_PENDING] as FYPStage[]).includes(stage)) {
       await prisma.fYPDocument.create({
         data: {
           fypId: fyp.id,
@@ -249,7 +255,7 @@ async function main() {
       });
     }
 
-    if ([FYPStage.SRS_PENDING, FYPStage.SRS_APPROVED, FYPStage.INTERNAL_PENDING].includes(stage)) {
+    if (([FYPStage.SRS_PENDING, FYPStage.SRS_APPROVED, FYPStage.INTERNAL_PENDING] as FYPStage[]).includes(stage)) {
       await prisma.fYPDocument.create({
         data: {
           fypId: fyp.id,
@@ -260,7 +266,7 @@ async function main() {
       });
     }
 
-    if ([FYPStage.EXTERNAL_PENDING, FYPStage.EXTERNAL_DONE, FYPStage.COMPLETED].includes(stage)) {
+    if (([FYPStage.EXTERNAL_PENDING, FYPStage.EXTERNAL_DONE, FYPStage.COMPLETED] as FYPStage[]).includes(stage)) {
       await prisma.fYPDocument.create({
         data: {
           fypId: fyp.id,
@@ -272,7 +278,7 @@ async function main() {
     }
 
     // Add plagiarism reports for approved proposals
-    if ([FYPStage.SRS_PENDING, FYPStage.SRS_APPROVED].includes(stage)) {
+    if (([FYPStage.SRS_PENDING, FYPStage.SRS_APPROVED] as FYPStage[]).includes(stage)) {
       await prisma.plagiarismReport.create({
         data: {
           fypId: fyp.id,
@@ -392,6 +398,8 @@ async function main() {
   console.log('Examiner: examiner1@acadflow.edu / examiner123');
   console.log('HOD: hod@acadflow.edu / hod123');
   console.log('Dean: dean@acadflow.edu / dean123');
+  console.log('Student Affairs: affairs@acadflow.edu / affairs123');
+  console.log('Accounts: accounts@acadflow.edu / accounts123');
 }
 
 main()

@@ -1,19 +1,31 @@
 import { Router } from 'express';
-import authRoutes from './auth.routes';
-import fypRoutes from './fyp.routes';
-import evaluationRoutes from './evaluation.routes';
-import clearanceRoutes from './clearance.routes';
-import notificationRoutes from './notification.routes';
-import adminRoutes from './admin.routes';
+import { authRoutes } from '../modules/auth';
+import { fypRoutes } from '../modules/fyp';
+import { evaluationRoutes } from '../modules/evaluation';
+import { clearanceRoutes } from '../modules/clearance';
+import { notificationRoutes } from '../modules/notification';
+import { adminRoutes } from '../modules/admin';
 
-const router = Router();
+export class AppRoutes {
+  private router: Router;
 
-router.use('/auth', authRoutes);
-router.use('/fyp', fypRoutes);
-router.use('/evaluations', evaluationRoutes);
-router.use('/clearance', clearanceRoutes);
-router.use('/notifications', notificationRoutes);
-router.use('/admin', adminRoutes);
+  constructor() {
+    this.router = Router();
+    this.setupRoutes();
+  }
 
-export default router;
+  private setupRoutes(): void {
+    this.router.use('/auth', authRoutes);
+    this.router.use('/fyp', fypRoutes);
+    this.router.use('/evaluations', evaluationRoutes);
+    this.router.use('/clearance', clearanceRoutes);
+    this.router.use('/notifications', notificationRoutes);
+    this.router.use('/admin', adminRoutes);
+  }
 
+  public getRouter(): Router {
+    return this.router;
+  }
+}
+
+export default new AppRoutes().getRouter();
